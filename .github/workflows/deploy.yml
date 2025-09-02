@@ -3,7 +3,7 @@ name: Deploy Trading Bot
 on:
   push:
     branches:
-      - main
+      - trading-bot-implementation
 
 jobs:
   deploy:
@@ -23,7 +23,7 @@ jobs:
         script: |
           # The repository should be cloned at ~/sand-bot
           cd ~/sand-bot
-          git pull origin main
+          git pull origin trading-bot-implementation
           echo "Setting up environment and restarting bot..."
 
           # Set the correct python version
