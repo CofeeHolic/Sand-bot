@@ -1,0 +1,44 @@
+name: Deploy Trading Bot
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Deploy to AWS
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.REMOTE_HOST }}
+        username: ${{ secrets.REMOTE_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: ${{ secrets.REMOTE_PORT || 22 }}
+        script: |
+          # The repository should be cloned at ~/sand-bot
+          cd ~/sand-bot
+          git pull origin main
+          echo "Setting up environment and restarting bot..."
+
+          # Set the correct python version
+          pyenv local 3.10.18
+
+          # Create venv and install dependencies
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+          # Kill the old process to avoid conflicts
+          pkill -f "python trading_bot.py" || true
+
+          # Start the new process in the background
+          nohup python trading_bot.py > trading_bot.log 2>&1 &
+
+          echo "Deployment complete."
